@@ -1,0 +1,21 @@
+# DoseSense runs as a single service. There is no separate database container:
+# the cohort is CSV on disk and the only mutable state is a clinician-feedback
+# SQLite file, so Postgres would add an orchestration dependency and a failure
+# mode without buying anything at this scale. The persistence layer is behind
+# functions in backend/app/main.py and swapping it is a contained change.
+services:
+  dosesense:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DOSESENSE_PATIENT_LIMIT: "0"
+      DOSESENSE_DB: /app/feedback/feedback.sqlite3
+    volumes:
+      # Keep clinician feedback across container rebuilds.
+      - dosesense-feedback-v2:/app/feedback
+    restart: unless-stopped
+
+volumes:
+  dosesense-feedback-v2:
+
